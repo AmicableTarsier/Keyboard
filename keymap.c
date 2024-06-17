@@ -322,8 +322,7 @@ bool oled_task_user(void) {
                 oled_timer = timer_read();
             }
             break;
-    }
-    oled_render_dirty(false);
+    };
     return false;
 }
 #endif
