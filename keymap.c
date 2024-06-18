@@ -26,16 +26,22 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_F13, KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLS, KC_DEL,
         KC_F14, KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP,
         KC_F15, KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN,
-        KC_F16, KC_LCTL, KC_LGUI, KC_LALT,                   KC_SPC,                    MO(_FN), KC_RALT, KC_RCTL, KC_LEFT,          KC_DOWN, KC_RGHT
+        MO(_FN), KC_LCTL, KC_LGUI, KC_LALT,                   KC_SPC,                    MO(_FN), KC_RALT, KC_RCTL, KC_LEFT,          KC_DOWN, KC_RGHT
     ),
     [_FN] = LAYOUT_ansi(
                 QK_BOOT, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______,  KC_END,
-        RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
-        _______, _______, _______, _______,                   _______,                   _______, _______, _______, _______,          _______, _______
+        RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_M_SN, RGB_M_P,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, RGB_M_B,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          RGB_HUI, RGB_M_TW,
+        _______, _______, _______, _______,                   _______,                   _______, _______, _______, RGB_SAD,          RGB_HUD, RGB_SAI
     ),
 };
+
+#ifdef ENCODER_MAP_ENABLE
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+    [0] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(KC_LEFT, KC_RGHT) },
+};
+#endif
 
 #ifdef OLED_ENABLE
 #include <stdio.h>
@@ -263,12 +269,6 @@ static void render_space(void) {
 #endif
     char render_row[128];
     int row,i;
-	
-	if (zero_wpm_cycles >= 128*3) {
-		return;
-	} else if (wpm == 0) {
-		zero_wpm_cycles++;
-	}
 
 	for (row=0; row<4; row++) {
 		oled_set_cursor(0,row);
@@ -304,7 +304,7 @@ bool oled_task_user(void) {
             break;
         case OLED_ANIMATION:
             render_space();
-            if (timer_elapsed(oled_timer) > 5000) {
+            if (timer_elapsed(oled_timer) > 3100) {
                 oled_timer = timer_read();
             }
             break;
@@ -323,6 +323,7 @@ bool oled_task_user(void) {
             }
             break;
     };
+    oled_render_dirty(true);
     return false;
 }
 #endif
