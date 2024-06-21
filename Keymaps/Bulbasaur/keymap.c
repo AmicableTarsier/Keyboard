@@ -30,9 +30,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_FN] = LAYOUT_ansi(
                 QK_BOOT, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______,  KC_END,
-        RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_M_SN, RGB_M_P,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, RGB_M_B,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          RGB_HUI, RGB_M_TW,
+        RGB_TOG, _______, RGB_M_R, RGB_M_SW, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, RGB_M_SN, RGB_M_P,
+        _______, _______, _______, _______, _______, _______, RGB_M_G, _______, _______, RGB_M_K, _______, _______, _______,          _______, RGB_M_B,
+        _______, _______, _______, RGB_M_X, _______, _______, _______, _______, _______, _______, _______, _______, _______,          RGB_HUI, RGB_M_TW,
         _______, _______, _______, _______,                   _______,                   _______, _______, _______, RGB_SAD,          RGB_HUD, RGB_SAI
     ),
 };
@@ -59,7 +59,7 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;  // Return the rotation state
 }
 
-static void render_logo(void) {
+static void render_welcome(void) {
 // hello carson
 static const char PROGMEM nibble_logo[] = {// 'pixil-frame-0(1)', 128x32px
 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -460,7 +460,7 @@ PGM_P const mask_running2_rows[] PROGMEM = { mask_running2_row_1, mask_running2_
 
 #include <stdbool.h>
 
-static void render_space(void) {
+static void render_bulbasaur(void) {
 #ifdef WPM_ENABLE
     char wpm = get_current_wpm();
 #else
@@ -471,6 +471,9 @@ static void render_space(void) {
     static unsigned int call_count = 0;  // static counter to manage frame switching
     bool use_running2 = false;
     bool is_running = wpm >= 10;  // Define a threshold for switching to running animations
+
+    // Increment call_count more quickly based on the WPM to make animations switch faster
+    unsigned int frame_increment = 1 + (wpm / 40);  // Increase animation speed based on WPM
 
     if (is_running) {
         use_running2 = (call_count / 20) % 2;  // Toggle between running1 and running2 every 20 calls
@@ -486,7 +489,7 @@ static void render_space(void) {
             unsigned int wpm_offset = i - wpm_shift;
             render_row[i] = pgm_read_byte(pgm_read_ptr(&(sky_rows[row])) + i + state);
 
-            if (i >= wpm_shift && wpm_offset < 34) {
+            if (i >= wpm_shift && wpm_offset < 32) {
                 if (is_running) {
                     if (use_running2) {
                         render_row[i] = (render_row[i] & pgm_read_byte(pgm_read_ptr(&(mask_running2_rows[row])) + wpm_offset))
@@ -511,16 +514,17 @@ static void render_space(void) {
     }
 
     state = (state + 1 + (wpm / 15)) % (192 * 2);
-    call_count++;  // Increment the frame count
+    call_count += frame_increment;  // Increment the frame count more rapidly with higher WPM
 
     oled_render_dirty(true); // call with 'true' for smoother animation, but encoder might skip pulses in this case
 }
 
 
+
 bool oled_task_user(void) {
     switch (current_oled_state) {
         case OLED_LOGO:
-            render_logo();
+            render_welcome();
             if (timer_elapsed(oled_timer) > 3000) {
                 current_oled_state = OLED_ANIMATION;
                 oled_timer = timer_read();
@@ -528,7 +532,7 @@ bool oled_task_user(void) {
             }
             break;
         case OLED_ANIMATION:
-            render_space();
+            render_bulbasaur();
             if (timer_elapsed(oled_timer) > 3000) {
                 oled_timer = timer_read();
             }
